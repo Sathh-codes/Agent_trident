@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trident</title>
+    <meta name="description"
+        content="Automated multi-agent AI stock trading system with real-time analysis and decision making.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ─── Header ──────────────────────────────────────────────────────── -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                    <polyline points="16 7 22 7 22 13"></polyline>
+                </svg>
+            </div>
+            <h1>Trident <span class="badge-ai">AI</span></h1>
+        </div>
+        <div class="header-right">
+            <div class="live-clock" id="live-clock"></div>
+            <div class="status-pill" id="status-pill">
+                <span class="status-dot"></span>
+                <span class="status-text">Offline</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─── Main Grid ───────────────────────────────────────────────────── -->
+    <main id="dashboard">
+
+        <!-- Top Row: Balance + Decision + Controls -->
+        <section class="top-row">
+            <div class="card card-balance" id="card-balance">
+                <div class="card-label">Portfolio Balance</div>
+                <div class="card-value" id="balance-value">$10,000.00</div>
+                <div class="card-sub" id="balance-change"></div>
+            </div>
+
+            <div class="card card-decision" id="card-decision">
+                <div class="card-label">Final Decision</div>
+                <div class="decision-row">
+                    <span class="action-badge hold" id="action-badge">HOLD</span>
+                    <span class="stock-name" id="stock-name">—</span>
+                </div>
+                <div class="confidence-bar-wrap">
+                    <div class="confidence-bar" id="confidence-bar" style="width: 0%"></div>
+                </div>
+                <div class="card-sub" id="decision-confidence">Confidence: —</div>
+            </div>
+
+            <div class="card card-controls">
+                <div class="card-label">System Controls</div>
+                <div class="controls-buttons">
+                    <button class="btn btn-start" id="btn-start">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Start
+                    </button>
+                    <button class="btn btn-stop" id="btn-stop" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                        Stop
+                    </button>
+                </div>
+                <div class="card-sub" id="cycle-info">Cycle: 0 | Last update: —</div>
+            </div>
+        </section>
+
+        <!-- Portfolio Holdings -->
+        <section class="portfolio-row">
+            <div class="card card-portfolio">
+                <div class="card-label">Current Holdings</div>
+                <div class="portfolio-container" id="portfolio-container">
+                    <div class="log-empty">No stocks currently owned.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Decision Summary -->
+        <section class="summary-row" id="summary-section" style="display:none;">
+            <div class="card card-summary">
+                <div class="card-label">Decision Summary</div>
+                <p id="decision-summary"></p>
+                <p class="dissent" id="dissenting-views"></p>
+            </div>
+        </section>
+
+        <!-- Chart -->
+        <section class="chart-section">
+            <div class="card card-chart">
+                <div class="chart-header">
+                    <div class="card-label">Price Chart — <span id="chart-symbol">—</span></div>
+                    <div class="chart-legend">
+                        <span class="legend-dot green"></span> Close Price
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="price-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transaction History -->
+        <section class="history-section">
+            <div class="card card-history">
+                <div class="card-label">Transaction History</div>
+                <div class="history-container" id="transaction-history">
+                    <div class="log-empty">No transactions yet...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agent Cards -->
+        <section class="agents-row">
+            <div class="card card-agent" id="agent-technical">
+                <div class="agent-header">
+                    <div class="agent-icon technical">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="agent-name">Technical Analyst</div>
+                        <div class="agent-sub">Charts &amp; Indicators</div>
+                    </div>
+                    <span class="action-badge small hold" id="tech-badge">—</span>
+                </div>
+                <div class="agent-reasoning" id="tech-reasoning">Waiting for analysis...</div>
+                <div class="agent-signals" id="tech-signals"></div>
+            </div>
+
+            <div class="card card-agent" id="agent-sentiment">
+                <div class="agent-header">
+                    <div class="agent-icon sentiment">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                            <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                            <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="agent-name">Sentiment Analyst</div>
+                        <div class="agent-sub">Market Mood &amp; News</div>
+                    </div>
+                    <span class="action-badge small hold" id="sent-badge">—</span>
+                </div>
+                <div class="agent-reasoning" id="sent-reasoning">Waiting for analysis...</div>
+                <div class="agent-signals" id="sent-signals"></div>
+            </div>
+
+            <div class="card card-agent" id="agent-risk">
+                <div class="agent-header">
+                    <div class="agent-icon risk">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="agent-name">Risk Manager</div>
+                        <div class="agent-sub">Risk &amp; Position Sizing</div>
+                    </div>
+                    <span class="action-badge small hold" id="risk-badge">—</span>
+                </div>
+                <div class="agent-reasoning" id="risk-reasoning">Waiting for analysis...</div>
+                <div class="agent-signals" id="risk-signals"></div>
+            </div>
+        </section>
+
+        <!-- Agent Activity Log -->
+        <section class="log-section">
+            <div class="card card-log">
+                <div class="card-label">Agent Activity Log</div>
+                <div class="log-container" id="agent-log-container">
+                    <div class="log-empty">Agents will output their analysis here once started...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Error Banner -->
+        <div class="error-banner" id="error-banner" style="display:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span id="error-text"></span>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>AgentTrader AI — Multi-Agent Trading System &middot; Data from Alpha Vantage &middot; AI powered by Requesty
+        </p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
